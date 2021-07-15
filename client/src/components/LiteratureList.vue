@@ -103,6 +103,8 @@ export default {
           value: 'title',
         },
         { text: 'Author(s)', value: 'authors' },
+        { text: 'Year', value: 'year' },
+        { text: 'Journal', value: 'journal' },
         { text: 'Tags', value: 'tags' },
         { text: 'DOI', value: 'doi' },
         { text: 'Actions', value: 'actions', sortable: false },

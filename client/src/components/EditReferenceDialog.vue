@@ -33,6 +33,7 @@
                 <v-text-field
                   v-model="newRef.title"
                   label="Title"
+                  readonly
                 />
               </v-col>
               <v-col
@@ -43,6 +44,7 @@
                 <v-text-field
                   v-model="newRef.authors"
                   label="Authors"
+                  readonly
                 />
               </v-col>
               <v-col
@@ -53,9 +55,36 @@
                 <v-text-field
                   v-model="newRef.doi"
                   label="DOI"
+                  readonly
                 />
               </v-col>
-              <v-col>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-text-field
+                  v-model="newRef.journal"
+                  label="Journal"
+                  readonly
+                />
+              </v-col>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-text-field
+                  v-model="newRef.year"
+                  label="Year"
+                  readonly
+                />
+              </v-col>
+              <v-col
+                cols="12"
+                sm="12"
+                md="12"
+              >
                 <v-select
                   v-model="newRef.tags"
                   :items="tags"
@@ -91,9 +120,9 @@
           <v-btn
             color="blue darken-1"
             text
-            @click="save"
+            @click="editReference"
           >
-            Save
+            Save Edits
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -173,6 +202,8 @@ export default {
         doi: '',
         tags: [],
         abstract: '',
+        journal: '',
+        year: '',
       },
     };
   },
@@ -181,7 +212,7 @@ export default {
       this.showEditDialog = false;
       this.showDeleteDialog = false;
     },
-    editItem() {
+    editReference() {
       const path = `http://localhost:5000/literature/${this.item.ident}`;
       axios.put(path, this.newRef)
         .then(() => {
@@ -194,6 +225,8 @@ export default {
         });
       // eslint-disable-next-line
       console.log(this.item);
+      this.showEditDialog = false;
+      this.showDeleteDialog = false;
     },
     clearNewRef() {
       // TODO: better deep copy?
@@ -210,6 +243,8 @@ export default {
           // tell parent about the error
           this.$emit('reference-deleted-error', error);
         });
+      this.showEditDialog = false;
+      this.showDeleteDialog = false;
     },
   },
 };

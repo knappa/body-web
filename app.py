@@ -15,7 +15,7 @@ app.config.from_object(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-TAG_LIST = ["lung", "immune", "liver", "heart", "brain", "kidneys", "lymph"]
+TAG_LIST = ["lung", "immune", "liver", "heart", "brain", "kidneys", "lymph", "misc"]
 
 ################################################################################
 # database
@@ -32,7 +32,10 @@ COLUMNS = [
     "title",
     "authors",
     "abstract",
+    "journal",
+    "year",
 ]
+
 
 def get_db():
     """get the database from app context"""
@@ -89,16 +92,37 @@ def db_insert(
     title: str,
     authors: Union[str, List[str]],
     abstract: str,
+    journal: str,
+    year: str,
 ):
     if isinstance(tags, list):
         tags = ",".join(tags)
     if isinstance(authors, list):
         authors = ",".join(authors)
-    db = get_db()
+    if abstract is None:
+        abstract = ""
+    if year is None:
+        year = ""
+    if isinstance(year, int):
+        year = str(year)
     if ident is None:
         ident = uuid.uuid4().hex
+
+    db = get_db()
+    print(
+        ident,
+        doi,
+        tags,
+        submitter,
+        approved,
+        title,
+        authors,
+        abstract,
+        journal,
+        year,
+    )
     db.execute(
-        "INSERT INTO literature VALUES (" + ", ".join(len(COLUMNS)*["?"]) +  " )",
+        "INSERT INTO literature VALUES (" + ", ".join(len(COLUMNS) * ["?"]) + " )",
         (
             ident,
             doi,
@@ -108,6 +132,8 @@ def db_insert(
             title,
             authors,
             abstract,
+            journal,
+            year,
         ),
     )
     db.commit()
@@ -115,6 +141,7 @@ def db_insert(
 
 
 ################################################################################
+
 
 def init_db():
     db = get_db()
@@ -134,6 +161,8 @@ with app.app_context():
             title="my great paper",
             authors="A. C. Knapp",
             abstract="a paper",
+            journal="Annals of Mathemematics",
+            year="1980",
         )
 
 
@@ -178,6 +207,8 @@ def literature():
             title=post_data.get("title"),
             authors=post_data.get("authors"),
             abstract=post_data.get("abstract"),
+            journal=post_data.get("journal"),
+            year=str(post_data.get("year")),
         )
         response_object["message"] = "Paper added!"
         response_object["uuid"] = new_ident
@@ -214,6 +245,8 @@ def single_paper(ident: str):
             title=post_data.get("title"),
             authors=post_data.get("authors"),
             abstract=post_data.get("abstract"),
+            journal=post_data.get("journal"),
+            year=str(post_data.get("year")),
         )
         response_object["message"] = "Paper modified!"
     elif request.method == "GET":
