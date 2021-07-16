@@ -104,6 +104,15 @@
                   value="Abstract"
                 />
               </v-container>
+              <v-container fluid>
+                <v-textarea
+                  v-model="newRef.comments"
+                  clearable
+                  clear-icon="mdi-close-circle"
+                  label="Comments"
+                  value="Comments"
+                />
+              </v-container>
             </v-row>
           </v-container>
         </v-card-text>
@@ -202,6 +211,7 @@ export default {
         doi: '',
         tags: [],
         abstract: '',
+        comments: '',
         journal: '',
         year: '',
       },

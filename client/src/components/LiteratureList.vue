@@ -41,7 +41,8 @@
           </template>
           <template #expanded-item="{ headers, item }">
             <td :colspan="headers.length">
-              <h3>Abstract:</h3> {{ item.abstract }}
+              <h3>Abstract:</h3> {{ item.abstract }} <br>
+              <h3>Comments:</h3> {{ item.comments }} <br>
             </td>
           </template>
           <template #[`item.tags`]="{ item }">
@@ -76,7 +77,6 @@
 <script>
 import axios from 'axios';
 import AddReferenceDialog from './AddReferenceDialog.vue';
-// import EditReferenceDialog from './EditReferenceDialog.vue';
 import Alert from './Alert.vue';
 import EditReferenceDialog from './EditReferenceDialog.vue';
 
@@ -85,11 +85,16 @@ export default {
     Alert,
     AddReferenceDialog,
     EditReferenceDialog,
-    // EditReferenceDialog,
+  },
+  props: {
+    initSearch: {
+      type: String,
+      default: '',
+    },
   },
   data() {
     return {
-      search: '',
+      search: this.initSearch,
       addRefDialog: false,
       tags: [],
       references: [],

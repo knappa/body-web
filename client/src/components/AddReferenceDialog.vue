@@ -118,6 +118,15 @@
                 value="Abstract"
               />
             </v-container>
+            <v-container fluid>
+              <v-textarea
+                v-model="newRef.comments"
+                clearable
+                clear-icon="mdi-close-circle"
+                label="Comments"
+                value="Comments"
+              />
+            </v-container>
           </v-row>
         </v-container>
       </v-card-text>
@@ -163,6 +172,7 @@ export default {
         doi: '',
         tags: [],
         abstract: '',
+        comments: '',
         journal: '',
         year: '',
       },
@@ -246,6 +256,7 @@ export default {
           this.newRef.doi = '';
           this.newRef.tags = [];
           this.newRef.abstract = '';
+          this.newRef.comments = '';
           this.newRef.journal = '';
           this.newRef.year = '';
           // tell parent to update references

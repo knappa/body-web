@@ -32,6 +32,7 @@ COLUMNS = [
     "title",
     "authors",
     "abstract",
+    "comments",
     "journal",
     "year",
 ]
@@ -92,6 +93,7 @@ def db_insert(
     title: str,
     authors: Union[str, List[str]],
     abstract: str,
+    comments: str,
     journal: str,
     year: str,
 ):
@@ -109,18 +111,6 @@ def db_insert(
         ident = uuid.uuid4().hex
 
     db = get_db()
-    print(
-        ident,
-        doi,
-        tags,
-        submitter,
-        approved,
-        title,
-        authors,
-        abstract,
-        journal,
-        year,
-    )
     db.execute(
         "INSERT INTO literature VALUES (" + ", ".join(len(COLUMNS) * ["?"]) + " )",
         (
@@ -132,6 +122,7 @@ def db_insert(
             title,
             authors,
             abstract,
+            comments,
             journal,
             year,
         ),
@@ -155,12 +146,13 @@ with app.app_context():
         init_db()
         db_insert(
             doi="1",
-            tags=["lung", "immune"],
+            tags=["misc"],
             submitter="ACK",
             approved=True,
             title="my great paper",
             authors="A. C. Knapp",
             abstract="a paper",
+            comments="Better than Cats",
             journal="Annals of Mathemematics",
             year="1980",
         )
@@ -207,6 +199,7 @@ def literature():
             title=post_data.get("title"),
             authors=post_data.get("authors"),
             abstract=post_data.get("abstract"),
+            comments=post_data.get("comments"),
             journal=post_data.get("journal"),
             year=str(post_data.get("year")),
         )
@@ -245,6 +238,7 @@ def single_paper(ident: str):
             title=post_data.get("title"),
             authors=post_data.get("authors"),
             abstract=post_data.get("abstract"),
+            comments=post_data.get("comments"),
             journal=post_data.get("journal"),
             year=str(post_data.get("year")),
         )

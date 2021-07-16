@@ -15,6 +15,9 @@ const routes = [
     path: '/list',
     name: 'LiteratureList',
     component: LiteratureList,
+    props(route) {
+      return { initSearch: route.query.system };
+    },
   },
 ];
 
