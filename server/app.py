@@ -1,6 +1,6 @@
 import sqlite3
 import uuid
-from typing import List, Union
+from typing import Dict, List, Union
 
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
@@ -272,6 +272,45 @@ def single_paper(ident: str):
         db_remove(ident=ident)
 
     return jsonify(response_object)
+
+
+@app.route("/bibtex", methods=["GET"])
+def bibtex():
+    """Find BiBTeX representation of the literature.
+
+    * On GET, returns BiBTeX representation.
+    """
+    cur = get_db().cursor()
+
+    assert request.method == "GET"
+    search_tag_list = request.args.get("tags", "").split(",")
+    sql_query = "SELECT * FROM literature"
+    if len(search_tag_list) > 0:
+        sql_query += " WHERE " + " AND ".join(
+            ["INSTR(tags, '" + tag + "') > 0" for tag in search_tag_list]
+        )
+    literature_entries: List[Dict] = [
+        db_row_to_dict(reference) for reference in cur.execute(sql_query)
+    ]
+
+    def make_bibtex_entry(reference):
+        # unused:
+        #     "submitter",
+        #     "approved",
+        #     "abstract",
+        return f"""
+@misc{{{reference['ident']},
+    title = {{{reference['title']}}},
+    author = {{{reference['authors']}}},
+    year = {{{reference['year']}}},
+    journal = {{{reference['journal']}}},
+    doi = {{{reference['doi']}}},
+    keywords = {{{", ".join(reference['tags'])}}},
+    annote = {{{reference['comments']}}},
+}}
+"""
+
+    return "\n".join(map(make_bibtex_entry, literature_entries))
 
 
 if __name__ == "__main__":

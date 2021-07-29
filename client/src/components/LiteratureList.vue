@@ -71,6 +71,17 @@
         </v-data-table>
       </div>
     </div>
+    <div class="row">
+      <div class="col-sm-10">
+        <v-btn
+          class="ma-2"
+          outlined
+          @click="downloadBibtex()"
+        >
+          Download
+        </v-btn>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -163,6 +174,23 @@ export default {
       this.addRefForm.authors = '';
       this.addRefForm.doi = '';
       this.addRefForm.read = [];
+    },
+    downloadBibtex() {
+      const path = 'http://localhost:5000/bibtex';
+      axios.get(path, { params: { tags: this.search } })
+        .then((res) => {
+          const fileURL = window.URL.createObjectURL(new Blob([res.data]));
+          const fileLink = document.createElement('a');
+          fileLink.href = fileURL;
+          fileLink.setAttribute('download', 'references.bib');
+          document.body.appendChild(fileLink);
+
+          fileLink.click();
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error);
+        });
     },
   },
 };
