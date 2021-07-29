@@ -1,8 +1,9 @@
-from flask import Flask, jsonify, request, g
-from flask_cors import CORS
-import uuid
 import sqlite3
+import uuid
 from typing import List, Union
+
+from flask import Flask, g, jsonify, request
+from flask_cors import CORS
 
 # configuration
 DEBUG = True
@@ -13,7 +14,6 @@ app.config.from_object(__name__)
 
 # enable CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
-
 
 TAG_LIST = ["lung", "immune", "liver", "heart", "brain", "kidneys", "lymph", "misc"]
 
@@ -69,6 +69,7 @@ WHERE
 
 
 def db_get(*, ident: str):
+    """Get an item from the literature based on its ident"""
     db = get_db()
     sql_query = "SELECT * FROM literature WHERE ident = ?"
     results = list(db.execute(sql_query, (ident,)))
@@ -76,6 +77,7 @@ def db_get(*, ident: str):
 
 
 def db_remove(*, ident: str):
+    """Remove an item from the literature based on its ident"""
     db = get_db()
     sql_query = "DELETE FROM literature WHERE ident = ?"
     results = list(db.execute(sql_query, (ident,)))
@@ -97,6 +99,7 @@ def db_insert(
     journal: str,
     year: str,
 ):
+    """Insert an item into the literature"""
     if isinstance(tags, list):
         tags = ",".join(tags)
     if isinstance(authors, list):
@@ -135,6 +138,7 @@ def db_insert(
 
 
 def init_db():
+    """Initialize the database."""
     db = get_db()
     db.execute("CREATE TABLE literature (" + ",".join(COLUMNS) + ")")
     db.commit()
@@ -149,15 +153,16 @@ with app.app_context():
             tags=["misc"],
             submitter="ACK",
             approved=True,
-            title="my great paper",
+            title="A disproof of the Riemann Hypothesis",
             authors="A. C. Knapp",
-            abstract="a paper",
+            abstract="We find a zero not on the critical line",
             comments="Better than Cats",
-            journal="Annals of Mathemematics",
-            year="1980",
+            journal="Annals of Mathematics",
+            year="1978",
         )
 
 
+# noinspection PyUnusedLocal
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, "_database", None)
@@ -169,22 +174,32 @@ def close_connection(exception):
 
 
 def db_row_to_dict(db_row):
-    def filter(c_name, val):
-        if c_name in ["tags"]:
-            return (c_name, val.split(","))
-        else:
-            return (c_name, val)
+    """Convert a database row to dictionary form."""
 
-    return dict([filter(col_name, value) for col_name, value in zip(COLUMNS, db_row)])
+    def filter_entries(c_name, val):
+        if c_name in ["tags"]:
+            return c_name, val.split(",")
+        else:
+            return c_name, val
+
+    return dict(
+        [filter_entries(col_name, value) for col_name, value in zip(COLUMNS, db_row)]
+    )
 
 
 @app.route("/tags", methods=["GET"])
 def tag_list():
+    """Return the current list of tags."""
     return jsonify(TAG_LIST)
 
 
 @app.route("/literature", methods=["GET", "POST"])
 def literature():
+    """Access the literature.
+
+    * On GET, returns lists of entries
+    * On POST, inserts new entries into database
+    """
     response_object = {"status": "success"}
 
     cur = get_db().cursor()
@@ -207,15 +222,15 @@ def literature():
         response_object["uuid"] = new_ident
     else:
         assert request.method == "GET"
-        taglist = request.args.get("tags", "").split(",")
+        search_tag_list = request.args.get("tags", "").split(",")
         sql_query = "SELECT * FROM literature"
-        if len(taglist) > 0:
+        if len(search_tag_list) > 0:
             sql_query += " WHERE " + " AND ".join(
-                ["INSTR(tags, '" + tag + "') > 0" for tag in taglist]
+                ["INSTR(tags, '" + tag + "') > 0" for tag in search_tag_list]
             )
-        literature = cur.execute(sql_query)
+        literature_entry = cur.execute(sql_query)
         response_object["literature"] = [
-            db_row_to_dict(reference) for reference in literature
+            db_row_to_dict(reference) for reference in literature_entry
         ]
 
     return jsonify(response_object)
@@ -223,6 +238,12 @@ def literature():
 
 @app.route("/literature/<string:ident>", methods=["GET", "PUT", "DELETE"])
 def single_paper(ident: str):
+    """Access individual entries.
+
+    On PUT, updates database entry corresponding to ident.
+    On GET, returns database entry corresponding to ident.
+    On DELETE, deletes database entry corresponding to ident
+    """
     response_object = {"status": "success"}
 
     if request.method == "PUT":
@@ -244,8 +265,8 @@ def single_paper(ident: str):
         )
         response_object["message"] = "Paper modified!"
     elif request.method == "GET":
-        literature = db_get(ident=ident)
-        response_object["literature"] = literature
+        literature_entry = db_get(ident=ident)
+        response_object["literature"] = literature_entry
     else:
         assert request.method == "DELETE"
         db_remove(ident=ident)
