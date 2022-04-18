@@ -8,6 +8,30 @@ from flask_cors import CORS
 # configuration
 DEBUG = True
 
+TAG_LIST = ["lung", "immune", "liver", "heart", "brain", "kidneys", "lymph", "misc"]
+
+################################################################################
+# database
+################################################################################
+
+DATABASE = "literature.db"
+
+COLUMNS = [
+    "ident",
+    "doi",
+    "tags",
+    "submitter",
+    "approved",
+    "title",
+    "authors",
+    "abstract",
+    "comments",
+    "journal",
+    "year",
+]
+
+
+# noinspection PyUnusedLocal
 def create_app(test_config=None):
     # instantiate the app
     app = Flask(__name__)
@@ -16,36 +40,12 @@ def create_app(test_config=None):
     # enable CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    TAG_LIST = ["lung", "immune", "liver", "heart", "brain", "kidneys", "lymph", "misc"]
-
-    ################################################################################
-    # database
-    ################################################################################
-
-    DATABASE = "literature.db"
-
-    COLUMNS = [
-        "ident",
-        "doi",
-        "tags",
-        "submitter",
-        "approved",
-        "title",
-        "authors",
-        "abstract",
-        "comments",
-        "journal",
-        "year",
-    ]
-
-
     def get_db():
         """get the database from app context"""
         db = getattr(g, "_database", None)
         if db is None:
             db = g._database = sqlite3.connect(DATABASE)
         return db
-
 
     def is_db_initialized():
         """test to see if the literature table in present in the database"""
@@ -65,9 +65,7 @@ def create_app(test_config=None):
         )
         return ("literature",) in tables
 
-
     ################################################################################
-
 
     def db_get(*, ident: str):
         """Get an item from the literature based on its ident"""
@@ -76,7 +74,6 @@ def create_app(test_config=None):
         results = list(db.execute(sql_query, (ident,)))
         return results
 
-
     def db_remove(*, ident: str):
         """Remove an item from the literature based on its ident"""
         db = get_db()
@@ -84,7 +81,6 @@ def create_app(test_config=None):
         results = list(db.execute(sql_query, (ident,)))
         db.commit()
         return results
-
 
     def db_insert(
         *,
@@ -134,16 +130,13 @@ def create_app(test_config=None):
         db.commit()
         return ident
 
-
     ################################################################################
-
 
     def init_db():
         """Initialize the database."""
         db = get_db()
         db.execute("CREATE TABLE literature (" + ",".join(COLUMNS) + ")")
         db.commit()
-
 
     # make sure the literature table is present
     with app.app_context():
@@ -162,7 +155,6 @@ def create_app(test_config=None):
                 year="1978",
             )
 
-
     # noinspection PyUnusedLocal
     @app.teardown_appcontext
     def close_connection(exception):
@@ -170,9 +162,7 @@ def create_app(test_config=None):
         if db is not None:
             db.close()
 
-
     ################################################################################
-
 
     def db_row_to_dict(db_row):
         """Convert a database row to dictionary form."""
@@ -184,15 +174,16 @@ def create_app(test_config=None):
                 return c_name, val
 
         return dict(
-            [filter_entries(col_name, value) for col_name, value in zip(COLUMNS, db_row)]
+            [
+                filter_entries(col_name, value)
+                for col_name, value in zip(COLUMNS, db_row)
+            ]
         )
-
 
     @app.route("/tags", methods=["GET"])
     def tag_list():
         """Return the current list of tags."""
         return jsonify(TAG_LIST)
-
 
     @app.route("/literature", methods=["GET", "POST"])
     def literature():
@@ -236,7 +227,6 @@ def create_app(test_config=None):
 
         return jsonify(response_object)
 
-
     @app.route("/literature/<string:ident>", methods=["GET", "PUT", "DELETE"])
     def single_paper(ident: str):
         """Access individual entries.
@@ -273,7 +263,6 @@ def create_app(test_config=None):
             db_remove(ident=ident)
 
         return jsonify(response_object)
-
 
     @app.route("/bibtex", methods=["GET"])
     def bibtex():
@@ -315,6 +304,7 @@ def create_app(test_config=None):
 
     return app
 
+
 if __name__ == "__main__":
-    app = create_app()
-    app.run()
+    server_app = create_app()
+    server_app.run()
