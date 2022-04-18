@@ -223,7 +223,7 @@ export default {
       this.showDeleteDialog = false;
     },
     editReference() {
-      const path = `http://localhost:5000/literature/${this.item.ident}`;
+      const path = `http://immunedigitaltwin.org:5000/literature/${this.item.ident}`;
       axios.put(path, this.newRef)
         .then(() => {
           // tell parent to update references
@@ -243,7 +243,7 @@ export default {
       this.newRef = JSON.parse(JSON.stringify(this.item));
     },
     deleteItem() {
-      const path = `http://localhost:5000/literature/${this.item.ident}`;
+      const path = `http://immunedigitaltwin.org:5000/literature/${this.item.ident}`;
       axios.delete(path)
         .then(() => {
           // tell parent to update references

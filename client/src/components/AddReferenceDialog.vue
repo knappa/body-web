@@ -247,7 +247,7 @@ export default {
     },
     saveReference() {
       // TODO
-      const path = 'http://localhost:5000/literature';
+      const path = 'http://immunedigitaltwin.org:5000/literature';
       axios.post(path, this.newRef)
         .then(() => {
           // reset newRef

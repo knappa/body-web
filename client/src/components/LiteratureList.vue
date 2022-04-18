@@ -134,7 +134,7 @@ export default {
   },
   methods: {
     getTags() {
-      const path = 'http://localhost:5000/tags';
+      const path = 'http://immunedigitaltwin.org:5000/tags';
       axios.get(path)
         .then((res) => {
           this.tags = res.data;
@@ -145,7 +145,7 @@ export default {
         });
     },
     getLiterature() {
-      const path = 'http://localhost:5000/literature';
+      const path = 'http://immunedigitaltwin.org:5000/literature';
       axios.get(path)
         .then((res) => {
           this.references = res.data.literature;
@@ -156,7 +156,7 @@ export default {
         });
     },
     addRef(payload) {
-      const path = 'http://localhost:5000/literature';
+      const path = 'http://immunedigitaltwin.org:5000/literature';
       axios.post(path, payload)
         .then(() => {
           this.getLiterature();
@@ -176,7 +176,7 @@ export default {
       this.addRefForm.read = [];
     },
     downloadBibtex() {
-      const path = 'http://localhost:5000/bibtex';
+      const path = 'http://immunedigitaltwin.org:5000/bibtex';
       axios.get(path, { params: { tags: this.search } })
         .then((res) => {
           const fileURL = window.URL.createObjectURL(new Blob([res.data]));
