@@ -48,7 +48,6 @@ def literature():
     return jsonify(response_object)
 
 
-@app.route("/literature/<string:ident>", methods=["GET", "PUT", "DELETE"])
 def single_paper(ident: str):
     """Access individual entries.
 
