@@ -131,6 +131,16 @@ def db_literature_remove(*, ident: str):
     return results
 
 
+def db_person_remove(*, ident: str):
+    """Remove a person from the personel table based on their ident"""
+    db = get_db()
+    with db_lock:
+        sql_query = "DELETE FROM personel WHERE ident = ?"
+        results = list(db.execute(sql_query, (ident,)))
+        db.commit()
+    return results
+
+
 def db_literature_insert(
     *,
     ident: str = None,
