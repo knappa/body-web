@@ -12,12 +12,12 @@
         v-bind="attrs"
         v-on="on"
       >
-        Add reference
+        Add person
       </v-btn>
     </template>
     <v-card>
       <v-card-title>
-        <span class="text-h5">Enter DOI and select tags for the new Reference</span>
+        <span class="text-h5">Enter OrcId and select tags for the new person</span>
       </v-card-title>
       <v-card-text>
         <v-container>
@@ -30,8 +30,8 @@
               <v-row>
                 <v-col>
                   <v-text-field
-                    v-model="newRef.doi"
-                    label="DOI"
+                    v-model="newRef.orcid"
+                    label="OrcId"
                     outlined
                   />
                 </v-col>
@@ -56,7 +56,7 @@
                 max-width="344"
                 outlined
               >
-                <v-card-title>Reference's data</v-card-title>
+                <v-card-title>Person's data</v-card-title>
                 <v-card-text>
                   <v-row
                     align="center"
@@ -64,8 +64,8 @@
                   >
                     <v-col>
                       <v-text-field
-                        v-model="newRef.title"
-                        label="Title"
+                        v-model="newRef.name"
+                        label="Name"
                         readonly
                       />
                     </v-col>
@@ -76,8 +76,8 @@
                   >
                     <v-col>
                       <v-text-field
-                        v-model="newRef.authors"
-                        label="Authors"
+                        v-model="newRef.affiliation"
+                        label="Affiliation"
                         readonly
                       />
                     </v-col>
@@ -88,20 +88,8 @@
                   >
                     <v-col>
                       <v-text-field
-                        v-model="newRef.journal"
-                        label="Journal"
-                        readonly
-                      />
-                    </v-col>
-                  </v-row>
-                  <v-row
-                    align="center"
-                    class="mx-0"
-                  >
-                    <v-col>
-                      <v-text-field
-                        v-model="newRef.year"
-                        label="Year"
+                        v-model="newRef.email"
+                        label="Email"
                         readonly
                       />
                     </v-col>
@@ -109,24 +97,6 @@
                 </v-card-text>
               </v-card>
             </v-col>
-            <v-container fluid>
-              <v-textarea
-                v-model="newRef.abstract"
-                clearable
-                clear-icon="mdi-close-circle"
-                label="Abstract"
-                value="Abstract"
-              />
-            </v-container>
-            <v-container fluid>
-              <v-textarea
-                v-model="newRef.comments"
-                clearable
-                clear-icon="mdi-close-circle"
-                label="Comments"
-                value="Comments"
-              />
-            </v-container>
           </v-row>
         </v-container>
       </v-card-text>
@@ -144,7 +114,7 @@
           color="blue darken-1"
           text
           :disabled="saveDisabled"
-          @click="saveReference"
+          @click="savePerson"
         >
           Save
         </v-btn>
@@ -167,81 +137,66 @@ export default {
     return {
       showDialog: false,
       newRef: {
-        title: '',
-        authors: '',
-        doi: '',
+        name: '',
+        orcid: '',
         tags: [],
-        abstract: '',
-        comments: '',
-        journal: '',
-        year: '',
+        affiliation: '',
+        email: '',
       },
       saveDisabled: true,
     };
   },
   computed: {
-    doi() {
-      return this.newRef.doi;
+    orcid() {
+      return this.newRef.orcid;
     },
   },
   watch: {
-    doi() {
-      const path = `http://api.crossref.org/works/${this.doi}`;
-      axios.get(path)
+    orcid() {
+      const path = `https://pub.orcid.org/v2.1/${this.orcid}`;
+      axios.get(path, {
+        headers: {
+          Accept: 'application/json',
+        },
+      })
         .then((response) => {
           if (!response.statusText === 'OK') {
             this.saveDisabled = true;
             return;
           }
           this.saveDisabled = false;
-          const data = response.data.message;
+          const { person } = response.data;
 
-          if (data.DOI) {
-            this.newRef.doi = `doi:${data.DOI}`;
-          }
+          if (!person) return;
 
-          if (data.title) {
-            if (Array.isArray(data.title)) {
-              this.newRef.title = data.title.join(' ');
-            } else {
-              this.newRef.title = String(data.title);
+          if (person.name) {
+            if (person.name['credit-name']) {
+              this.newRef.name = person.name['credit-name'];
+            } else if (person.name['given-names'] && person.name['family-name']) {
+              this.newRef.name = `${person.name['given-names'].value} ${person.name['family-name'].value}`;
             }
           } else {
-            this.newRef.title = '';
+            this.newRef.name = '';
           }
 
-          if (data.author) {
-            if (Array.isArray(data.author)) {
-              this.newRef.authors = data.author.map((element) => `${element.given} ${element.family}`).join(', ');
-            } else {
-              this.newRef.authors = String(data.authors);
+          if (person.emails && person.emails.email) {
+            const { email } = person.emails;
+            if (email.length > 0) {
+              this.newRef.email = email[0].email;
             }
-          } else {
-            this.newRef.authors = '';
           }
 
-          if (data['container-title']) {
-            this.newRef.journal = data['container-title'].join(' ');
-          } else {
-            this.newRef.journal = '';
-          }
-
-          if (data.published && data.published['date-parts']) {
-            // TODO: I'm completely prepared for this to be a problem later,
-            // there doesn't seem to be a lot of documentation for this format
-            if (Array.isArray(data.published['date-parts'])) {
-              const date = data.published['date-parts'][0];
-              const year = date[0];
-              this.newRef.year = year;
+          const activities = response.data['activities-summary'];
+          if (activities.employments && activities.employments['employment-summary']) {
+            const employments = activities.employments['employment-summary'];
+            if (employments[0].organization) {
+              this.newRef.affiliation = employments[0].organization.name;
             }
-          } else {
-            this.newRef.year = '';
           }
-          // console.log(response.data);
         })
         .catch((error) => {
           // tell parent about the error
-          this.$emit('reference-added-error', error);
+          this.$emit('person-added-error', error);
         });
     },
   },
@@ -249,26 +204,23 @@ export default {
     close() {
       this.showDialog = false;
     },
-    saveReference() {
+    savePerson() {
       // TODO
-      const path = 'http://immunedigitaltwin.org:5000/literature';
+      const path = 'http://immunedigitaltwin.org:5000/personel';
       axios.post(path, this.newRef)
         .then(() => {
           // reset newRef
-          this.newRef.title = '';
-          this.newRef.authors = '';
-          this.newRef.doi = '';
+          this.newRef.name = '';
+          this.newRef.orcid = '';
           this.newRef.tags = [];
-          this.newRef.abstract = '';
-          this.newRef.comments = '';
-          this.newRef.journal = '';
-          this.newRef.year = '';
-          // tell parent to update references
-          this.$emit('reference-added');
+          this.newRef.affiliation = '';
+          this.newRef.email = '';
+          // tell parent to update people
+          this.$emit('person-added');
         })
         .catch((error) => {
           // tell parent about the error
-          this.$emit('reference-added-error', error);
+          this.$emit('person-added-error', error);
         });
       this.showDialog = false;
     },

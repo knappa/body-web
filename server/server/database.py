@@ -21,7 +21,7 @@ DEFAULT_TAG_LIST = [
 ]
 
 DATABASE_FILENAME = "literature.db"
-COLUMNS = [
+LITERATURE_COLUMNS = [
     "ident",
     "doi",
     "tags",
@@ -33,6 +33,17 @@ COLUMNS = [
     "comments",
     "journal",
     "year",
+]
+
+PERSONEL_COLUMNS = [
+    "ident",
+    "orcid",
+    "name",
+    "tags",
+    "submitter",
+    "approved",
+    "email",
+    "affiliation",
 ]
 
 # for thread safety
@@ -54,30 +65,51 @@ def get_db():
 
 def is_db_initialized():
     """test to see if the literature table in present in the database"""
+    return "literature" in get_db_tables()
+
+
+def get_db_tables() -> List[str]:
     db = get_db()
     with db_lock:
         tables = list(
-            db.execute(
-                """
-                    SELECT 
-                        name
-                    FROM 
-                        sqlite_master 
-                    WHERE 
-                        type ='table' AND 
-                        name NOT LIKE 'sqlite_%';
-                    """
+            chain.from_iterable(
+                db.execute(
+                    "SELECT name FROM sqlite_master"
+                    " WHERE type ='table' AND name NOT LIKE 'sqlite_%';"
+                )
             )
         )
-    return ("literature",) in tables
+    return tables
 
 
-def db_literature_get(*, ident: str):
+def db_literature_get(*, ident: str = None, tags: List[str] = None):
     """Get an item from the literature based on its ident"""
     db = get_db()
+    sql_query = "SELECT * FROM literature"
+    params = []
+    if ident:
+        sql_query += " WHERE ident = ?"
+        params.append(ident)
+    if tags and len(tags) > 0:
+        sql_query += " WHERE " + " AND ".join(["INSTR(tags, ?) > 0"] * len(tags))
+        params.extend(tags)
     with db_lock:
-        sql_query = "SELECT * FROM literature WHERE ident = ?"
-        results = list(db.execute(sql_query, (ident,)))
+        results = list(db.execute(sql_query, tuple(params)))
+    return results
+
+
+def db_person_get(*, ident: str = None, tags: List[str] = None):
+    db = get_db()
+    sql_query = "SELECT * FROM personel"
+    params = []
+    if ident:
+        sql_query += " WHERE ident = ?"
+        params.append(ident)
+    if tags and len(tags) > 0:
+        sql_query += " WHERE " + " AND ".join(["INSTR(tags, ?) > 0"] * len(tags))
+        params.extend(tags)
+    with db_lock:
+        results = list(db.execute(sql_query, tuple(params)))
     return results
 
 
@@ -85,8 +117,8 @@ def db_get_tags() -> List[str]:
     """Get tag list"""
     db = get_db()
     with db_lock:
-        results = chain.from_iterable(db.execute("SELECT * FROM tags"))
-    return list(results)
+        results = list(chain.from_iterable(db.execute("SELECT * FROM tags")))
+    return results
 
 
 def db_literature_remove(*, ident: str):
@@ -130,7 +162,9 @@ def db_literature_insert(
     db = get_db()
     with db_lock:
         db.execute(
-            "INSERT INTO literature VALUES (" + ", ".join(len(COLUMNS) * ["?"]) + " )",
+            "INSERT INTO literature VALUES ("
+            + ", ".join(len(LITERATURE_COLUMNS) * ["?"])
+            + " )",
             (
                 ident,
                 doi,
@@ -143,6 +177,44 @@ def db_literature_insert(
                 comments,
                 journal,
                 year,
+            ),
+        )
+        db.commit()
+    return ident
+
+
+def db_person_insert(
+    *,
+    ident: str = None,
+    orcid: str = None,
+    name: str,
+    tags: Union[str, List[str]],
+    submitter: str = None,
+    approved: bool = False,
+    email: str = None,
+    affiliation: str = None,
+):
+    """Insert an item into the literature"""
+    if isinstance(tags, list):
+        tags = ",".join(tags)
+    if ident is None:
+        ident = uuid.uuid4().hex
+
+    db = get_db()
+    with db_lock:
+        db.execute(
+            "INSERT INTO personel VALUES ("
+            + ", ".join(len(PERSONEL_COLUMNS) * ["?"])
+            + " )",
+            (
+                ident,
+                orcid,
+                name,
+                tags,
+                submitter,
+                approved,
+                email,
+                affiliation,
             ),
         )
         db.commit()
@@ -163,25 +235,46 @@ def db_add_tag(*, tag_name: str) -> bool:
 
 def init_db():
     """Initialize the database."""
+    tables = get_db_tables()
     db = get_db()
     with db_lock:
-        db.execute("CREATE TABLE literature (" + ",".join(COLUMNS) + ")")
-        db.execute("CREATE TABLE tags (tag_name TEXT NOT NULL UNIQUE)")
-        db.executemany(
-            "INSERT INTO tags VALUES (?)", map(lambda x: (x,), DEFAULT_TAG_LIST)
-        )
+        if "literature" not in tables:
+            # create literature database
+            db.execute("CREATE TABLE literature (" + ",".join(LITERATURE_COLUMNS) + ")")
+        if "tags" not in tables:
+            # create tag database
+            db.execute("CREATE TABLE tags (tag_name TEXT NOT NULL UNIQUE)")
+            db.executemany(
+                "INSERT INTO tags VALUES (?)", map(lambda x: (x,), DEFAULT_TAG_LIST)
+            )
+        if "personel" not in tables:
+            # create personel database
+            db.execute("CREATE TABLE personel (" + ",".join(PERSONEL_COLUMNS) + ")")
         db.commit()
 
 
-def db_row_to_dict(db_row):
-    """Convert a database row to dictionary form."""
+def filter_entries(c_name, val):
+    if c_name in ["tags"]:
+        return c_name, val.split(",")
+    else:
+        return c_name, val
 
-    def filter_entries(c_name, val):
-        if c_name in ["tags"]:
-            return c_name, val.split(",")
-        else:
-            return c_name, val
 
+def literature_db_row_to_dict(db_row):
+    """Convert a literature database row to dictionary form."""
     return dict(
-        [filter_entries(col_name, value) for col_name, value in zip(COLUMNS, db_row)]
+        [
+            filter_entries(col_name, value)
+            for col_name, value in zip(LITERATURE_COLUMNS, db_row)
+        ]
+    )
+
+
+def person_db_row_to_dict(db_row):
+    """Convert a personel database row to dictionary form."""
+    return dict(
+        [
+            filter_entries(col_name, value)
+            for col_name, value in zip(PERSONEL_COLUMNS, db_row)
+        ]
     )

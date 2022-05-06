@@ -1,11 +1,11 @@
-from flask import Flask, g
+from flask import Flask
 from flask_cors import CORS
 
 # configuration
 from server.database import (db_get_tags, db_literature_get,
                              db_literature_insert, db_literature_remove,
-                             db_row_to_dict, get_db, init_db,
-                             is_db_initialized)
+                             get_db, init_db, is_db_initialized,
+                             literature_db_row_to_dict)
 
 DEBUG = True
 
@@ -47,14 +47,19 @@ def create_app(test_config=None):
     ################################################################################
 
     from server.literature import bibtex, literature, single_paper
+    from server.people import people, person
     from server.tags import tag_list
 
     tag_list = app.route("/tags", methods=["GET"])(tag_list)
+
     literature = app.route("/literature", methods=["GET", "POST"])(literature)
     single_paper = app.route(
         "/literature/<string:ident>", methods=["GET", "PUT", "DELETE"]
     )(single_paper)
     bibtex = app.route("/bibtex", methods=["GET"])(bibtex)
+
+    people = app.route("/personel", methods=["GET", "POST"])(people)
+    person = app.route("/person", methods=["GET", "POST", "DELETE"])(person)
 
     return app
 

@@ -3,7 +3,7 @@ from typing import Dict, List
 from flask import jsonify, request
 
 from server import (db_literature_get, db_literature_insert,
-                    db_literature_remove, db_row_to_dict, get_db)
+                    db_literature_remove, literature_db_row_to_dict)
 
 
 def literature():
@@ -13,8 +13,6 @@ def literature():
     * On POST, inserts new entries into database
     """
     response_object = {"status": "success"}
-
-    cur = get_db().cursor()  # TODO: move to database.py
 
     if request.method == "POST":
         post_data = request.get_json()
@@ -35,14 +33,9 @@ def literature():
     else:
         assert request.method == "GET"
         search_tag_list = request.args.get("tags", "").split(",")
-        sql_query = "SELECT * FROM literature"
-        if len(search_tag_list) > 0:
-            sql_query += " WHERE " + " AND ".join(
-                ["INSTR(tags, '" + tag + "') > 0" for tag in search_tag_list]
-            )
-        literature_entry = cur.execute(sql_query)
+        literature_entry = db_literature_get(tags=search_tag_list)
         response_object["literature"] = [
-            db_row_to_dict(reference) for reference in literature_entry
+            literature_db_row_to_dict(reference) for reference in literature_entry
         ]
 
     return jsonify(response_object)
@@ -90,17 +83,11 @@ def bibtex():
 
     * On GET, returns BiBTeX representation.
     """
-    cur = get_db().cursor()  # TODO: move to database.py
-
     assert request.method == "GET"
     search_tag_list = request.args.get("tags", "").split(",")
-    sql_query = "SELECT * FROM literature"
-    if len(search_tag_list) > 0:
-        sql_query += " WHERE " + " AND ".join(
-            ["INSTR(tags, '" + tag + "') > 0" for tag in search_tag_list]
-        )
     literature_entries: List[Dict] = [
-        db_row_to_dict(reference) for reference in cur.execute(sql_query)
+        literature_db_row_to_dict(reference)
+        for reference in db_literature_get(tags=search_tag_list)
     ]
 
     def make_bibtex_entry(reference):
