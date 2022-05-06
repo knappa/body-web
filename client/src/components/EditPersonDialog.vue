@@ -191,7 +191,7 @@ export default {
       this.showDeleteDialog = false;
     },
     editPerson() {
-      const path = `http://immunedigitaltwin.org:5000/personel/${this.item.ident}`;
+      const path = `http://immunedigitaltwin.org:5000/person/${this.item.ident}`;
       axios.put(path, this.newRef)
         .then(() => {
           // tell parent to update people
@@ -211,7 +211,7 @@ export default {
       this.newRef = JSON.parse(JSON.stringify(this.item));
     },
     deleteItem() {
-      const path = `http://immunedigitaltwin.org:5000/personel/${this.item.ident}`;
+      const path = `http://immunedigitaltwin.org:5000/person/${this.item.ident}`;
       axios.delete(path)
         .then(() => {
           // tell parent to update people
