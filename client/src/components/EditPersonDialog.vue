@@ -19,7 +19,7 @@
       </template>
       <v-card>
         <v-card-title>
-          <span class="text-h5">Edit Reference</span>
+          <span class="text-h5">Edit Person</span>
         </v-card-title>
 
         <v-card-text>
@@ -31,8 +31,8 @@
                 md="4"
               >
                 <v-text-field
-                  v-model="newRef.title"
-                  label="Title"
+                  v-model="newRef.name"
+                  label="Name"
                   readonly
                 />
               </v-col>
@@ -42,8 +42,8 @@
                 md="4"
               >
                 <v-text-field
-                  v-model="newRef.authors"
-                  label="Authors"
+                  v-model="newRef.affiliation"
+                  label="Affiliation"
                   readonly
                 />
               </v-col>
@@ -53,8 +53,8 @@
                 md="4"
               >
                 <v-text-field
-                  v-model="newRef.doi"
-                  label="DOI"
+                  v-model="newRef.orcid"
+                  label="OrcId"
                   readonly
                 />
               </v-col>
@@ -64,19 +64,8 @@
                 md="4"
               >
                 <v-text-field
-                  v-model="newRef.journal"
-                  label="Journal"
-                  readonly
-                />
-              </v-col>
-              <v-col
-                cols="12"
-                sm="6"
-                md="4"
-              >
-                <v-text-field
-                  v-model="newRef.year"
-                  label="Year"
+                  v-model="newRef.email"
+                  label="Email"
                   readonly
                 />
               </v-col>
@@ -95,24 +84,6 @@
                   persistent-hint
                 />
               </v-col>
-              <v-container fluid>
-                <v-textarea
-                  v-model="newRef.abstract"
-                  clearable
-                  clear-icon="mdi-close-circle"
-                  label="Abstract"
-                  value="Abstract"
-                />
-              </v-container>
-              <v-container fluid>
-                <v-textarea
-                  v-model="newRef.comments"
-                  clearable
-                  clear-icon="mdi-close-circle"
-                  label="Comments"
-                  value="Comments"
-                />
-              </v-container>
             </v-row>
           </v-container>
         </v-card-text>
@@ -129,7 +100,7 @@
           <v-btn
             color="blue darken-1"
             text
-            @click="editReference"
+            @click="editPerson"
           >
             Save Edits
           </v-btn>
@@ -155,7 +126,7 @@
       <v-container>
         <v-card>
           <v-card-title>
-            <span class="text-h5">Delete Reference</span>
+            <span class="text-h5">Delete Person</span>
           </v-card-title>
 
           <v-card-text>
@@ -206,14 +177,11 @@ export default {
       showEditDialog: false,
       showDeleteDialog: false,
       newRef: {
-        title: '',
-        authors: '',
-        doi: '',
+        name: '',
+        orcid: '',
         tags: [],
-        abstract: '',
-        comments: '',
-        journal: '',
-        year: '',
+        affiliation: '',
+        email: '',
       },
     };
   },
@@ -222,16 +190,16 @@ export default {
       this.showEditDialog = false;
       this.showDeleteDialog = false;
     },
-    editReference() {
-      const path = `http://localhost:5000/literature/${this.item.ident}`;
+    editPerson() {
+      const path = `http://immunedigitaltwin.org:5000/personel/${this.item.ident}`;
       axios.put(path, this.newRef)
         .then(() => {
-          // tell parent to update references
-          this.$emit('reference-edited');
+          // tell parent to update people
+          this.$emit('person-edited');
         })
         .catch((error) => {
           // tell parent about the error
-          this.$emit('reference-edited-error', error);
+          this.$emit('person-edited-error', error);
         });
       // eslint-disable-next-line
       console.log(this.item);
@@ -243,15 +211,15 @@ export default {
       this.newRef = JSON.parse(JSON.stringify(this.item));
     },
     deleteItem() {
-      const path = `http://localhost:5000/literature/${this.item.ident}`;
+      const path = `http://immunedigitaltwin.org:5000/personel/${this.item.ident}`;
       axios.delete(path)
         .then(() => {
-          // tell parent to update references
-          this.$emit('reference-deleted');
+          // tell parent to update people
+          this.$emit('person-deleted');
         })
         .catch((error) => {
           // tell parent about the error
-          this.$emit('reference-deleted-error', error);
+          this.$emit('person-deleted-error', error);
         });
       this.showEditDialog = false;
       this.showDeleteDialog = false;
