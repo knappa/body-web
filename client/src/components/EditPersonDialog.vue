@@ -66,7 +66,6 @@
                 <v-text-field
                   v-model="newRef.email"
                   label="Email"
-                  readonly
                 />
               </v-col>
               <v-col
