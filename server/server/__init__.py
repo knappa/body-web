@@ -59,7 +59,7 @@ def create_app(test_config=None):
     bibtex = app.route("/bibtex", methods=["GET"])(bibtex)
 
     people = app.route("/personel", methods=["GET", "POST"])(people)
-    person = app.route("/person/<string:ident>", methods=["GET", "POST", "DELETE"])(
+    person = app.route("/person/<string:ident>", methods=["GET", "PUT", "DELETE"])(
         person
     )
 
