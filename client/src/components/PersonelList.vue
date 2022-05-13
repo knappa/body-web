@@ -59,7 +59,6 @@
           <template #[`item.actions`]="{ item }">
             <edit-person-dialog
               :item="item"
-              :tags="tags"
               @person-edited="getPersonel"
               @person-edited-error="getPersonel"
               @person-deleted="getPersonel"

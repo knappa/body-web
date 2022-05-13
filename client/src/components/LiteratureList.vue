@@ -32,7 +32,6 @@
               />
               <v-spacer />
               <add-reference-dialog
-                :tags="tags"
                 @reference-added="getLiterature"
                 @reference-added-error="getLiterature"
               />
@@ -58,7 +57,6 @@
           <template #[`item.actions`]="{ item }">
             <edit-reference-dialog
               :item="item"
-              :tags="tags"
               @reference-edited="getLiterature"
               @reference-edited-error="getLiterature"
               @reference-deleted="getLiterature"

@@ -214,23 +214,12 @@ export default {
         });
     },
   },
-  created() {
+  beforeMount() {
     this.getTags();
   },
   methods: {
     close() {
       this.showDialog = false;
-    },
-    getTags() {
-      const path = 'http://immunedigitaltwin.org:5000/tags';
-      axios.get(path)
-        .then((res) => {
-          this.tagList = res.data;
-        })
-        .catch((error) => {
-          // eslint-disable-next-line no-console
-          console.error(error);
-        });
     },
     savePerson() {
       // TODO
@@ -251,6 +240,17 @@ export default {
           this.$emit('person-added-error', error);
         });
       this.showDialog = false;
+    },
+    getTags() {
+      const path = 'http://immunedigitaltwin.org:5000/tags';
+      axios.get(path)
+        .then((res) => {
+          this.tagList = res.data;
+        })
+        .catch((error) => {
+          // eslint-disable-next-line no-console
+          console.error(error);
+        });
     },
     addTag() {
       // make sure that it is a non-null, non-zero length tag
@@ -277,7 +277,9 @@ export default {
           this.$emit('tag-added-error', error);
         });
       // reload tag list
-      this.getTags();
+      setTimeout(() => {
+        this.getTags();
+      }, 100);
     },
   },
 };
