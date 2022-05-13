@@ -1,7 +1,5 @@
 <template>
   <div>
-    <a href="/list">Literature List</a><br>
-    <a href="/people">People List</a>
     <center>
       <svg
         width="4in"
