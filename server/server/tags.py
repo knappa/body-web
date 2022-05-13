@@ -1,6 +1,7 @@
 from flask import jsonify, request
 
 from server.database import db_add_tag, db_get_tags
+from server.util import tag_sanitize, tags_sanitize
 
 
 def tag_list():
@@ -8,7 +9,12 @@ def tag_list():
     if request.method == "POST":
         post_data = request.get_json()
 
-        if db_add_tag(tag_name=post_data.get("tag_name")):
+        tag = tag_sanitize(post_data.get("tag_name"))
+
+        if len(tag) <= 0:
+            return
+
+        if db_add_tag(tag_name=tag):
             response_object = {"status": "success"}
             return jsonify(response_object)
         else:
@@ -16,4 +22,4 @@ def tag_list():
             return jsonify(response_object)
     else:
         assert request.method == "GET"
-        return jsonify(db_get_tags())
+        return jsonify(tags_sanitize(db_get_tags()))

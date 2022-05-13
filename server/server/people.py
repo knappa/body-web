@@ -2,6 +2,7 @@ from flask import jsonify, request
 
 from server.database import (db_person_get, db_person_insert, db_person_remove,
                              person_db_row_to_dict)
+from server.util import tags_sanitize
 
 
 def people():
@@ -17,7 +18,7 @@ def people():
         new_ident = db_person_insert(
             orcid=post_data.get("orcid"),
             name=post_data.get("name"),
-            tags=post_data.get("tags"),
+            tags=tags_sanitize(post_data.get("tags")),
             submitter=post_data.get("submitter"),
             approved=False,
             email=post_data.get("email"),
@@ -53,7 +54,7 @@ def person(ident: str):
             ident=ident,
             orcid=post_data.get("orcid"),
             name=post_data.get("name"),
-            tags=post_data.get("tags"),
+            tags=tags_sanitize(post_data.get("tags")),
             submitter=post_data.get("submitter"),
             approved=False,
             email=post_data.get("email"),

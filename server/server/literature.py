@@ -4,6 +4,7 @@ from flask import jsonify, request
 
 from server import (db_literature_get, db_literature_insert,
                     db_literature_remove, literature_db_row_to_dict)
+from server.util import tags_sanitize
 
 
 def literature():
@@ -18,7 +19,7 @@ def literature():
         post_data = request.get_json()
         new_ident = db_literature_insert(
             doi=post_data.get("doi"),
-            tags=post_data.get("tags"),
+            tags=tags_sanitize(post_data.get("tags")),
             submitter=post_data.get("submitter"),
             approved=False,
             title=post_data.get("title"),
@@ -57,7 +58,7 @@ def single_paper(ident: str):
         db_literature_insert(
             ident=ident,
             doi=post_data.get("doi"),
-            tags=post_data.get("tags"),
+            tags=tags_sanitize(post_data.get("tags")),
             submitter=post_data.get("submitter"),
             approved=False,
             title=post_data.get("title"),
