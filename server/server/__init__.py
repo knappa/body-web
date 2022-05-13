@@ -50,7 +50,7 @@ def create_app(test_config=None):
     from server.people import people, person
     from server.tags import tag_list
 
-    tag_list = app.route("/tags", methods=["GET"])(tag_list)
+    tag_list = app.route("/tags", methods=["GET", "POST"])(tag_list)
 
     literature = app.route("/literature", methods=["GET", "POST"])(literature)
     single_paper = app.route(

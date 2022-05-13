@@ -118,6 +118,7 @@ def db_get_tags() -> List[str]:
     db = get_db()
     with db_lock:
         results = list(chain.from_iterable(db.execute("SELECT * FROM tags")))
+    results.sort()
     return results
 
 

@@ -40,13 +40,30 @@
                 <v-col>
                   <v-select
                     v-model="newRef.tags"
-                    :items="tags"
-                    label="Select"
+                    :items="tagList"
+                    label="Select Tags"
                     multiple
                     chips
+                    deletable-chips
                     hint="Tags"
                     persistent-hint
                   />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <v-text-field
+                    v-model="newTag"
+                    outlined
+                    label="New Tag"
+                    type="text"
+                  >
+                    <template #append>
+                      <v-btn @click="addTag">
+                        <v-icon>mdi-plus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-text-field>
                 </v-col>
               </v-row>
             </v-col>
@@ -127,12 +144,7 @@
 import axios from 'axios';
 
 export default {
-  props: {
-    tags: {
-      type: Array,
-      required: true,
-    },
-  },
+  props: { },
   data() {
     return {
       showDialog: false,
@@ -144,6 +156,8 @@ export default {
         email: '',
       },
       saveDisabled: true,
+      tagList: [],
+      newTag: null,
     };
   },
   computed: {
@@ -200,9 +214,23 @@ export default {
         });
     },
   },
+  created() {
+    this.getTags();
+  },
   methods: {
     close() {
       this.showDialog = false;
+    },
+    getTags() {
+      const path = 'http://immunedigitaltwin.org:5000/tags';
+      axios.get(path)
+        .then((res) => {
+          this.tagList = res.data;
+        })
+        .catch((error) => {
+          // eslint-disable-next-line no-console
+          console.error(error);
+        });
     },
     savePerson() {
       // TODO
@@ -223,6 +251,33 @@ export default {
           this.$emit('person-added-error', error);
         });
       this.showDialog = false;
+    },
+    addTag() {
+      // make sure that it is a non-null, non-zero length tag
+      if (!this.newTag || this.newTag.length <= 0) {
+        return;
+      }
+      // normalize it
+      this.newTag = this.newTag.toLowerCase();
+      // exclude existing versions
+      if (this.tagList && this.tagList.includes(this.newTag)) {
+        return;
+      }
+      // submit new tag
+      const path = 'http://immunedigitaltwin.org:5000/tags';
+      axios.post(path, { tag_name: this.newTag })
+        .then(() => {
+          // reset newTag
+          this.newTag = '';
+          // tell parent to update tags
+          this.$emit('tag-added');
+        })
+        .catch((error) => {
+          // tell parent about the error
+          this.$emit('tag-added-error', error);
+        });
+      // reload tag list
+      this.getTags();
     },
   },
 };

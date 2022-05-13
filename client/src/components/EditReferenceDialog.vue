@@ -233,8 +233,6 @@ export default {
           // tell parent about the error
           this.$emit('reference-edited-error', error);
         });
-      // eslint-disable-next-line
-      console.log(this.item);
       this.showEditDialog = false;
       this.showDeleteDialog = false;
     },

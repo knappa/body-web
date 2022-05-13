@@ -32,9 +32,10 @@
               />
               <v-spacer />
               <add-person-dialog
-                :tags="tags"
                 @person-added="getPersonel"
                 @person-added-error="getPersonel"
+                @tag-added="getTags"
+                @tag-added-error="getTags"
               />
               <!-- TODO: something better with the error -->
             </v-toolbar>
