@@ -33,7 +33,11 @@ def literature():
         response_object["uuid"] = new_ident
     else:
         assert request.method == "GET"
-        search_tag_list = request.args.get("tags", "").split(",")
+        search_tag_list = [
+            tag for tag in request.args.get("tags", "").split(",") if len(tag) > 0
+        ]
+        if len(search_tag_list) == 0:
+            search_tag_list = None
         literature_entry = db_literature_get(tags=search_tag_list)
         response_object["literature"] = [
             literature_db_row_to_dict(reference) for reference in literature_entry
@@ -85,7 +89,9 @@ def bibtex():
     * On GET, returns BiBTeX representation.
     """
     assert request.method == "GET"
-    search_tag_list = request.args.get("tags", "").split(",")
+    search_tag_list = [
+        tag for tag in request.args.get("tags", "").split(",") if len(tag) > 0
+    ]
     literature_entries: List[Dict] = [
         literature_db_row_to_dict(reference)
         for reference in db_literature_get(tags=search_tag_list)

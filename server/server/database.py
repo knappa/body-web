@@ -266,7 +266,7 @@ def init_db():
 
 def filter_entries(c_name, val):
     if c_name in ["tags"]:
-        return c_name, val.split(",")
+        return c_name, [tag for tag in val.split(",") if len(tag) > 0]
     else:
         return c_name, val
 
